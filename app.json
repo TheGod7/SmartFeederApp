@@ -4,7 +4,7 @@
     "slug": "SmartFeeder-AplicationV2",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/ico/icon.png",
     "scheme": "smartfeederaplicationv2",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -23,6 +23,7 @@
     },
     "web": {
       "output": "static",
+      "bundler": "metro",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -38,7 +39,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
