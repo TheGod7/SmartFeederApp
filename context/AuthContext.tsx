@@ -17,7 +17,6 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useApi } from "./ApiContext";
 
 const { baseUrl, googleWebClientId, googleIosClientId } = Config;
 
@@ -50,7 +49,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [tokensReady, setTokensReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const api = useApi();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -66,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         ]);
         setAccessToken(aToken ?? null);
         setRefreshToken(rToken ?? null);
-      } catch (err) {
+      } catch {
         setAccessToken(null);
         setRefreshToken(null);
       } finally {
