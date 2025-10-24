@@ -45,8 +45,7 @@ export default function Register() {
     setError,
     trigger,
   } = useForm<FormData>({
-    mode: "onSubmit",
-    reValidateMode: "onChange",
+    mode: "onChange",
   });
 
   const [ShowPassword, setShowPassword] = useState(false);
@@ -55,7 +54,7 @@ export default function Register() {
     const response = await register(data);
 
     if (response.success) {
-      SuccessRegister(response.data);
+      router.replace("/(home)");
     } else {
       setError("email", {
         message: response.message,
@@ -68,7 +67,12 @@ export default function Register() {
       const response = await loginWithGoogle();
 
       if (response.success) {
-        SuccessRegister(response.data);
+        router.replace({
+          pathname: "/(home)",
+          params: {
+            hasPassword: String(response.data ?? false),
+          },
+        });
       } else {
         setError("email", {
           message: response.message,
@@ -80,15 +84,6 @@ export default function Register() {
         message: "Error de conexión. Inténtalo de nuevo.",
       });
     }
-  };
-
-  const SuccessRegister = (hasPassword?: boolean | undefined) => {
-    router.replace({
-      pathname: "/(home)",
-      params: {
-        hasPassword: hasPassword ? "true" : "false",
-      },
-    });
   };
 
   return (

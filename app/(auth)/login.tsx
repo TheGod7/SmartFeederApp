@@ -37,10 +37,7 @@ export default function Login() {
     formState: { errors },
     setError,
     clearErrors,
-  } = useForm<FormData>({
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-  });
+  } = useForm<FormData>();
 
   const [ShowPassword, setShowPassword] = useState(false);
 
@@ -51,7 +48,7 @@ export default function Login() {
       const response = await login(data);
 
       if (response.success) {
-        SuccessLogin(response.data);
+        router.replace("/(home)");
       } else {
         setError("email", {
           message: response.message || "Error de inicio de sesión",
@@ -76,7 +73,12 @@ export default function Login() {
       const response = await loginWithGoogle();
 
       if (response.success) {
-        SuccessLogin(response.data);
+        router.replace({
+          pathname: "/(home)",
+          params: {
+            hasPassword: String(response.data ?? false),
+          },
+        });
       } else {
         setError("email", {
           type: "manual",
@@ -90,15 +92,6 @@ export default function Login() {
         message: "Error de conexión durante el inicio de sesión con Google.",
       });
     }
-  };
-
-  const SuccessLogin = (hasPassword?: boolean) => {
-    router.replace({
-      pathname: "/(home)",
-      params: {
-        hasPassword: hasPassword ? "true" : "false",
-      },
-    });
   };
 
   return (

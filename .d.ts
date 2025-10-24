@@ -21,7 +21,7 @@ declare module "axios" {
 }
 
 declare global {
-  type CustomColor =
+  type BaseColor =
     | "text"
     | "background"
     | "primary"
@@ -31,6 +31,10 @@ declare global {
     | "white"
     | "black"
     | "transparent";
+
+  type ColorVariant = `${BaseColor}/${number}` | `${BaseColor}-${string}`;
+
+  type CustomColor = BaseColor | ColorVariant;
 
   type CustomTextSize =
     | "text-xs"
