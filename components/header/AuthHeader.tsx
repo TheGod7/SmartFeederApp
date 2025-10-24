@@ -1,16 +1,15 @@
-import { useAuth } from "@/context/AuthContext"; // 🚨 Importar useAuth
+import { useAuth } from "@/context/AuthContext";
 import { ImageBackground } from "expo-image";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "./CustomImage";
+import { Image } from "../CustomImage";
 
 const Header = (_route: any) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // 1. 🚨 Obtener el estado de carga del contexto de autenticación
   const { isLoading } = useAuth();
 
   return (

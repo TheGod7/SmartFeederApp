@@ -1,10 +1,12 @@
 import Config from "@/constants/config";
-import {
-  getAccessToken,
-  getRefreshToken,
-  saveTokens,
-} from "@/utils/secureStore";
-import axios, { AxiosInstance } from "axios";
+import { getRefreshToken, saveTokens } from "@/utils/secureStore";
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosRequestHeaders,
+} from "axios";
 import { useRouter } from "expo-router";
 import {
   createContext,
@@ -14,30 +16,33 @@ import {
   useState,
 } from "react";
 
-const apiInstance = axios.create({
-  baseURL: Config.baseUrl,
-});
+const apiInstance: AxiosInstance = axios.create({ baseURL: Config.baseUrl });
 const baseUrl = Config.baseUrl;
+const REFRESH_URL = `${baseUrl}auth/refresh`;
 
 let isRefreshing = false;
 let failedQueue: {
   resolve: (value?: any) => void;
   reject: (reason?: any) => void;
-  config: any;
+  config: AxiosRequestConfig;
 }[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+const processQueue = (
+  error: AxiosError | string | null,
+  token: string | null = null
+) => {
+  failedQueue.forEach(({ resolve, reject, config }) => {
     if (error) {
-      prom.reject(error);
+      resolve({ _refreshError: true });
     } else if (token) {
-      prom.resolve(
+      const headersObj = new AxiosHeaders((config.headers as any) || {});
+      headersObj.set("Authorization", `Bearer ${token}`);
+      const rawHeaders = headersObj.toJSON() as AxiosRequestHeaders;
+
+      resolve(
         apiInstance({
-          ...prom.config,
-          headers: {
-            ...prom.config.headers,
-            Authorization: `Bearer ${token}`,
-          },
+          ...config,
+          headers: rawHeaders,
         })
       );
     }
@@ -45,18 +50,12 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-interface ApiProviderProps {
-  api: AxiosInstance;
-}
-
-const ApiContext = createContext<ApiProviderProps | undefined>(undefined);
+const ApiContext = createContext<{ api: AxiosInstance } | undefined>(undefined);
 
 export const useApi = () => {
   const context = useContext(ApiContext);
-  if (context === undefined) {
-    throw new Error("useApi debe usarse dentro de un ApiProvider");
-  }
-  return context;
+  if (!context) throw new Error("useApi must be used within an ApiProvider");
+  return context.api;
 };
 
 export const ApiProvider: React.FC<{ children: ReactNode }> = ({
@@ -68,61 +67,64 @@ export const ApiProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const requestInterceptor = apiInstance.interceptors.request.use(
       async (config) => {
-        const accessToken = await getAccessToken();
+        const token = await (async () => {
+          try {
+            const mod = await import("@/utils/secureStore");
+            return await mod.getAccessToken();
+          } catch {
+            return null;
+          }
+        })();
 
-        if (accessToken && !config.url?.endsWith("auth/refresh")) {
-          config.headers.Authorization = `Bearer ${accessToken}`;
+        if (token && config.url !== REFRESH_URL) {
+          const headers = new AxiosHeaders(config.headers || {});
+          headers.set("Authorization", `Bearer ${token}`);
+          config.headers = headers.toJSON() as AxiosRequestHeaders;
         }
-
         return config;
       }
     );
 
     const responseInterceptor = apiInstance.interceptors.response.use(
       (response) => response,
-      async (error) => {
+      async (error: AxiosError) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          if (originalRequest.url?.endsWith("auth/refresh")) {
-            router.replace("/(auth)/logout");
-            return Promise.reject(error);
-          }
-
-          originalRequest._retry = true;
-
+        if (
+          error.response?.status === 401 &&
+          originalRequest &&
+          originalRequest.url !== REFRESH_URL
+        ) {
           return new Promise(async (resolve, reject) => {
             failedQueue.push({ config: originalRequest, resolve, reject });
 
             if (!isRefreshing) {
               isRefreshing = true;
-
               try {
                 const refreshToken = await getRefreshToken();
-
                 if (!refreshToken) {
+                  processQueue("No refresh token available.");
                   router.replace("/(auth)/logout");
-                  processQueue("No refresh token available");
-                  return reject(error);
+                  return;
                 }
 
+                const refreshHeaders = new AxiosHeaders({
+                  Authorization: `Bearer ${refreshToken}`,
+                }).toJSON() as AxiosRequestHeaders;
+
                 const { data } = await axios.post(
-                  `${baseUrl}auth/refresh`,
+                  REFRESH_URL,
                   {},
                   {
-                    headers: {
-                      Authorization: `Bearer ${refreshToken}`,
-                    },
+                    headers: refreshHeaders,
                   }
                 );
 
                 await saveTokens(data.token, data.refreshToken);
-
                 processQueue(null, data.token);
               } catch (err) {
+                processQueue(err as AxiosError);
                 router.replace("/(auth)/logout");
-                processQueue(err);
-                return reject(err);
               } finally {
                 isRefreshing = false;
               }

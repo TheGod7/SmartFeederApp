@@ -39,7 +39,7 @@ export default function SimpleButton({
   textAlign = "center",
   border,
   icon,
-  activeOpacity = 70, // 👈 Nuevo valor por defecto
+  activeOpacity = 70,
   ...props
 }: CustomButton) {
   const defaultTextSize = "text-xl";
@@ -47,7 +47,6 @@ export default function SimpleButton({
   const defaultCustomW = "w-auto";
   const defaultCustomH = "h-auto py-3";
 
-  // CLASE DE OPACIDAD ACTIVA: Usa la prop activa
   const activeOpacityClass = `active:opacity-${activeOpacity}`;
 
   const borderClasses = border
@@ -56,7 +55,6 @@ export default function SimpleButton({
       }`
     : "";
 
-  // MANEJO DE FONDO: Si es transparente, no se aplica color de fondo ni por defecto.
   const bgClass =
     backgroundColor === "transparent"
       ? ""
@@ -87,7 +85,7 @@ export default function SimpleButton({
 
   return (
     <Pressable
-      className={`${customW ? customW : defaultCustomW} ${activeOpacityClass}`} // 👈 Aplica la opacidad aquí
+      className={`${customW ? customW : defaultCustomW} ${activeOpacityClass}`}
       {...props}
     >
       <View

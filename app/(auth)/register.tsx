@@ -23,6 +23,7 @@ type FormData = {
 
 export default function Register() {
   const router = useRouter();
+  const { loginWithGoogle } = useAuth();
   const insets = useSafeAreaInsets();
 
   const EyeClose = require("@/assets/ico/ClosedEye.svg");
@@ -34,7 +35,7 @@ export default function Register() {
   const FOOTER_BOTTOM_PADDING = 16;
   const dynamicPaddingBottom = FOOTER_BOTTOM_PADDING + insets.bottom;
 
-  const { register } = useAuth();
+  const { register, isLoading } = useAuth();
 
   const {
     control,
@@ -49,20 +50,45 @@ export default function Register() {
   });
 
   const [ShowPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
     const response = await register(data);
 
     if (response.success) {
-      router.replace("/(auth)/login");
+      SuccessRegister(response.data);
     } else {
       setError("email", {
         message: response.message,
       });
     }
-    setIsLoading(false);
+  };
+
+  const OnGoogleSignin = async () => {
+    try {
+      const response = await loginWithGoogle();
+
+      if (response.success) {
+        SuccessRegister(response.data);
+      } else {
+        setError("email", {
+          message: response.message,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setError("email", {
+        message: "Error de conexión. Inténtalo de nuevo.",
+      });
+    }
+  };
+
+  const SuccessRegister = (hasPassword?: boolean | undefined) => {
+    router.replace({
+      pathname: "/(home)",
+      params: {
+        hasPassword: hasPassword ? "true" : "false",
+      },
+    });
   };
 
   return (
@@ -217,7 +243,7 @@ export default function Register() {
               borderSize: 1,
             }}
             disabled={isLoading}
-            onPress={() => console.log("Google pressed")}
+            onPress={() => OnGoogleSignin()}
           />
 
           <SimpleButton

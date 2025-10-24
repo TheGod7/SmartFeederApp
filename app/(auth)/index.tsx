@@ -44,7 +44,7 @@ export default function Index() {
       source={require("@/assets/images/Background.png")}
       style={{ width: "100%", height: "100%", flex: 1 }}
     >
-      <SafeAreaView className="flex-1 justify-between py-4 ">
+      <SafeAreaView className="flex-1 justify-between py-4">
         <AppHeader />
 
         <View className="flex-1 justify-around items-center px-4 pt-4 max-w-lg mx-auto">

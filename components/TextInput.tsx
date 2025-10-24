@@ -95,12 +95,7 @@ const TextInputComponent: React.FC<CustomTextInputProps> = ({
         )}
       </View>
 
-      {/* 💡 CAMBIO CLAVE: View que reserva el espacio para el footer */}
-      <View
-        // 💡 Aplicamos la altura mínima fija. Esto evita que los componentes inferiores salten.
-        className={footerHeightClass}
-      >
-        {/* Renderizamos el texto SÓLO si hay un footer */}
+      <View className={footerHeightClass}>
         {footer && (
           <Text
             className={`

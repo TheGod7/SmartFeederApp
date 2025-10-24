@@ -18,21 +18,18 @@ type FormData = {
   email: string;
   password: string;
 };
-
 export default function Login() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { login } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
+
   const EyeClose = require("@/assets/ico/ClosedEye.svg");
   const EyeOpen = require("@/assets/ico/OpenEye.svg");
-
   const EyeCloseWrong = require("@/assets/ico/ClosedEyeWrong.svg");
   const EyeOpenWrong = require("@/assets/ico/OpenEyeWrong.svg");
 
   const FOOTER_BOTTOM_PADDING = 16;
   const dynamicPaddingBottom = FOOTER_BOTTOM_PADDING + insets.bottom;
-
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
@@ -49,25 +46,61 @@ export default function Login() {
 
   const onSubmit = async (data: FormData) => {
     clearErrors();
-    setIsLoading(true);
+
     try {
       const response = await login(data);
 
       if (response.success) {
-        router.replace("/(auth)/register");
+        SuccessLogin(response.data);
       } else {
         setError("email", {
-          message: response.message,
+          message: response.message || "Error de inicio de sesión",
         });
         setError("password", {
-          message: response.message,
+          message: response.message || "Error de inicio de sesión",
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      setError("email", {
+        message: "Error de conexión. Inténtalo de nuevo.",
+      });
     } finally {
-      setIsLoading(false);
     }
   };
+
+  const OnGoogleSignin = async () => {
+    clearErrors();
+
+    try {
+      const response = await loginWithGoogle();
+
+      if (response.success) {
+        SuccessLogin(response.data);
+      } else {
+        setError("email", {
+          type: "manual",
+          message: response.message || "Error al iniciar sesión con Google.",
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setError("email", {
+        type: "manual",
+        message: "Error de conexión durante el inicio de sesión con Google.",
+      });
+    }
+  };
+
+  const SuccessLogin = (hasPassword?: boolean) => {
+    router.replace({
+      pathname: "/(home)",
+      params: {
+        hasPassword: hasPassword ? "true" : "false",
+      },
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       className="flex-1"
@@ -188,11 +221,11 @@ export default function Login() {
               borderColor: "text",
               borderSize: 1,
             }}
-            onPress={() => console.log("Google pressed")}
+            onPress={OnGoogleSignin}
           />
 
           <SimpleButton
-            text="¡No tienes una cuenta? Creala!"
+            text="¡No tienes una cuenta? Créala!"
             textColor="primary"
             backgroundColor="transparent"
             customW="w-full"
