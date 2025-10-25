@@ -41,7 +41,7 @@ const IntroText = () => (
 export default function Index() {
   return (
     <ImageBackground
-      source={require("@/assets/images/Background.png")}
+      source={require("@/assets/background/Background.png")}
       style={{ width: "100%", height: "100%", flex: 1 }}
     >
       <SafeAreaView className="flex-1 justify-between py-4">

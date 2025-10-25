@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BottomBackground from "@/components/background/Background";
 import { useAuth } from "@/context/AuthContext";
 import { Controller, useForm } from "react-hook-form";
 
@@ -93,6 +94,7 @@ export default function Register() {
       style={{ flex: 1, backgroundColor: "#070A13" }}
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
+      <BottomBackground position="bottom" />
       <View className="flex-1 justify-between px-6 py-4 max-w-xl mx-auto w-full">
         <View className="gap-4">
           <View>
@@ -247,7 +249,7 @@ export default function Register() {
             backgroundColor="transparent"
             customW="w-full"
             textSize="text-sm"
-            customH="h-8"
+            customH="h-auto"
             disabled={isLoading}
             onPress={() => router.replace("/(auth)/login")}
           />

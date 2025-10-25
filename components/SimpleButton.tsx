@@ -1,21 +1,30 @@
-import { Pressable, PressableProps, Text, View } from "react-native";
+import React from "react";
+import {
+  Pressable,
+  PressableProps,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import { Image } from "./CustomImage";
+
+type RoundedSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 
 interface CustomButton extends PressableProps {
   text: string;
   textSize?: TailwindTextSize;
-
   customW?: TailwindSizeClass;
   customH?: TailwindSizeClass;
-
   textColor?: TailwindColor;
   backgroundColor?: TailwindColor;
-  textAlign?: TextAlignOption;
-
+  textAlign?: "left" | "center" | "right";
   border?: BorderConfig;
   icon?: IcoConfig;
-
   activeOpacity?: 30 | 50 | 70 | 90;
+  rounded?: RoundedSize;
+  padding?: string;
+  baseBackgroundColor?: TailwindColor;
 }
 
 interface IcoConfig {
@@ -27,6 +36,7 @@ interface IcoConfig {
 interface BorderConfig {
   borderColor?: TailwindColor;
   borderSize?: 1 | 2 | 4 | 8;
+  borderStyle?: "solid" | "dashed" | "dotted";
 }
 
 export default function SimpleButton({
@@ -40,14 +50,17 @@ export default function SimpleButton({
   border,
   icon,
   activeOpacity = 70,
+  rounded = "xl",
+  padding = "py-3 px-6",
+  baseBackgroundColor,
   ...props
 }: CustomButton) {
   const defaultTextSize = "text-xl";
   const defaultIcoSize = "h-7 w-7";
   const defaultCustomW = "w-auto";
-  const defaultCustomH = "h-auto py-3";
+  const defaultCustomH = "h-auto";
 
-  const activeOpacityClass = `active:opacity-${activeOpacity}`;
+  const pressableClass = `${customW ? customW : defaultCustomW} active:opacity-${activeOpacity}`;
 
   const borderClasses = border
     ? `border ${border.borderSize ? `border-${border.borderSize}` : "border-4"} ${
@@ -76,45 +89,58 @@ export default function SimpleButton({
         ? "text-right"
         : "text-center";
 
+  const iconMarginClass = "mx-2";
+
   const IconComponent = icon ? (
     <Image
       source={icon.source}
-      className={`${icon.IcoSize ? icon.IcoSize : defaultIcoSize} mx-2`}
+      className={`${icon.IcoSize ? icon.IcoSize : defaultIcoSize} ${iconMarginClass}`}
     />
   ) : null;
 
+  const extraStyle: StyleProp<ViewStyle> =
+    border && border.borderStyle
+      ? { borderStyle: border.borderStyle as ViewStyle["borderStyle"] }
+      : {};
+
   return (
-    <Pressable
-      className={`${customW ? customW : defaultCustomW} ${activeOpacityClass}`}
-      {...props}
-    >
+    <Pressable className={pressableClass} {...props}>
+      {baseBackgroundColor && (
+        <View
+          className={`absolute inset-0 rounded-${rounded} bg-${baseBackgroundColor}`}
+          pointerEvents="none"
+        />
+      )}
+
       <View
+        style={extraStyle}
         className={`
-          w-auto 
-          ${bgClass} 
-          rounded-xl 
-          px-6 
-          items-center 
-          ${justifyClass} 
-          ${borderClasses} 
-          flex-row 
+          relative
+          ${bgClass}
+          rounded-${rounded}
+          ${padding}
+          items-center
+          ${justifyClass}
+          ${borderClasses}
+          flex-row
           ${customH ? customH : defaultCustomH}
+          w-auto
         `}
       >
         {icon && icon.icoAlign === "left" && IconComponent}
-
         <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
           className={`
-            font-itim 
-            ${textSize ? textSize : defaultTextSize} 
-            ${textColor ? `text-${textColor}` : "text-text"} 
-            ${textAlignClass} 
+            font-itim
+            ${textSize ? textSize : defaultTextSize}
+            ${textColor ? `text-${textColor}` : "text-text"}
+            ${textAlignClass}
             flex-shrink
           `}
         >
           {text}
         </Text>
-
         {icon && icon.icoAlign === "right" && IconComponent}
       </View>
     </Pressable>

@@ -1,3 +1,4 @@
+import BottomBackground from "@/components/background/Background";
 import Separator from "@/components/Separator";
 import SimpleButton from "@/components/SimpleButton";
 import TextInput from "@/components/TextInput";
@@ -98,9 +99,9 @@ export default function Login() {
     <KeyboardAvoidingView
       className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: "#070A13" }}
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
+      <BottomBackground position="bottom" />
       <View className="flex-1 justify-between px-6 py-4 max-w-xl mx-auto w-full">
         <View className="gap-4">
           <View>
@@ -223,7 +224,7 @@ export default function Login() {
             backgroundColor="transparent"
             customW="w-full"
             textSize="text-sm"
-            customH="h-8"
+            customH="h-auto"
             disabled={isLoading}
             onPress={() => router.replace("/(auth)/register")}
           />

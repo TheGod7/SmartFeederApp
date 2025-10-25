@@ -1,4 +1,3 @@
-import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -6,11 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "../CustomImage";
 import Background from "../background/Background";
 
-const Header = (_route: any) => {
+const HomeHeader = (_route: any) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
-  const { isLoading } = useAuth();
 
   return (
     <>
@@ -23,16 +20,17 @@ const Header = (_route: any) => {
           className={`flex-row items-center justify-start w-full px-4 py-2`}
         >
           <Pressable
-            disabled={isLoading}
-            className={`flex-row items-center active:opacity-60 -ml-2 ${isLoading ? "opacity-50" : ""}`}
-            onPress={() => router.dismissAll()}
+            className={`flex-row items-center active:opacity-60 mx-2 `}
+            onPress={() => router.replace("/(auth)/logout")}
           >
             <Image
-              source={require("@/assets/ico/Back2.svg")}
-              className="w-6 h-6 text-primary mr-1.5"
+              source={require("@/assets/ico/SignOut.svg")}
+              className="w-6 h-6 text-primary mr-2"
             />
 
-            <Text className="text-primary font-itim text-lg">Atrás</Text>
+            <Text className="text-wrong font-itim text-2xl">
+              Salir de la cuenta
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -40,4 +38,4 @@ const Header = (_route: any) => {
   );
 };
 
-export default Header;
+export default HomeHeader;

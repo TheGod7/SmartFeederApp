@@ -32,7 +32,7 @@ module.exports = {
     },
 
     {
-      pattern: /border(-b)?-(text|primary|accent|wrong)/,
+      pattern: /border(-b)?-(text|primary|accent|wrong|secondary|white|black)/,
     },
     {
       pattern: /border(-b)?-(1|2|4|8)/,
@@ -46,6 +46,9 @@ module.exports = {
     "text-3xl",
     "text-4xl",
     "text-5xl",
+    {
+      pattern: /rounded-(sm|md|lg|xl|2xl|3xl|full)/,
+    },
   ],
 
   plugins: [],

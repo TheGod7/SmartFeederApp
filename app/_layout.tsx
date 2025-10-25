@@ -28,27 +28,20 @@ export default function RootLayout() {
   return (
     <ApiProvider>
       <SafeAreaProvider>
-        <StatusBar style="light" translucent />
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          style="light"
+          animated
+        />
         <Stack
           screenOptions={{
             contentStyle: {
               backgroundColor: "#070A13",
             },
+            headerShown: false,
           }}
-        >
-          <Stack.Screen
-            name="(auth)"
-            options={{
-              headerShown: false,
-            }}
-          />
-          <Stack.Screen
-            name="(home)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        </Stack>
+        />
       </SafeAreaProvider>
     </ApiProvider>
   );
