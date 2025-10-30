@@ -25,6 +25,7 @@ interface CustomButton extends PressableProps {
   rounded?: RoundedSize;
   padding?: string;
   baseBackgroundColor?: TailwindColor;
+  iconSpacing?: "normal" | "edge";
 }
 
 interface IcoConfig {
@@ -53,6 +54,7 @@ export default function SimpleButton({
   rounded = "xl",
   padding = "py-3 px-6",
   baseBackgroundColor,
+  iconSpacing = "normal",
   ...props
 }: CustomButton) {
   const defaultTextSize = "text-xl";
@@ -61,47 +63,28 @@ export default function SimpleButton({
   const defaultCustomH = "h-auto";
 
   const pressableClass = `${customW ? customW : defaultCustomW} active:opacity-${activeOpacity}`;
-
   const borderClasses = border
     ? `border ${border.borderSize ? `border-${border.borderSize}` : "border-4"} ${
         border.borderColor ? `border-${border.borderColor}` : ""
       }`
     : "";
-
   const bgClass =
     backgroundColor === "transparent"
       ? ""
       : backgroundColor
         ? `bg-${backgroundColor}`
         : "bg-primary";
-
-  const justifyClass =
-    textAlign === "left"
-      ? "justify-start"
-      : textAlign === "right"
-        ? "justify-end"
-        : "justify-center";
-
-  const textAlignClass =
-    textAlign === "left"
-      ? "text-left"
-      : textAlign === "right"
-        ? "text-right"
-        : "text-center";
-
-  const iconMarginClass = "mx-2";
-
-  const IconComponent = icon ? (
-    <Image
-      source={icon.source}
-      className={`${icon.IcoSize ? icon.IcoSize : defaultIcoSize} ${iconMarginClass}`}
-    />
-  ) : null;
-
   const extraStyle: StyleProp<ViewStyle> =
     border && border.borderStyle
       ? { borderStyle: border.borderStyle as ViewStyle["borderStyle"] }
       : {};
+
+  const isIconEdge = iconSpacing === "edge";
+  const iconMarginClass = !isIconEdge ? "mx-2" : "";
+
+  let textAlignClass = "text-center";
+  if (textAlign === "left") textAlignClass = "text-left";
+  else if (textAlign === "right") textAlignClass = "text-right";
 
   return (
     <Pressable className={pressableClass} {...props}>
@@ -111,7 +94,6 @@ export default function SimpleButton({
           pointerEvents="none"
         />
       )}
-
       <View
         style={extraStyle}
         className={`
@@ -120,14 +102,19 @@ export default function SimpleButton({
           rounded-${rounded}
           ${padding}
           items-center
-          ${justifyClass}
           ${borderClasses}
           flex-row
           ${customH ? customH : defaultCustomH}
           w-auto
+          ${isIconEdge ? "justify-between" : "justify-center"}
         `}
       >
-        {icon && icon.icoAlign === "left" && IconComponent}
+        {icon && icon.icoAlign === "left" && (
+          <Image
+            source={icon.source}
+            className={`${icon.IcoSize ? icon.IcoSize : defaultIcoSize} ${iconMarginClass}`}
+          />
+        )}
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
@@ -135,13 +122,18 @@ export default function SimpleButton({
             font-itim
             ${textSize ? textSize : defaultTextSize}
             ${textColor ? `text-${textColor}` : "text-text"}
-            ${textAlignClass}
-            flex-shrink
+            flex-1
+            ${isIconEdge ? textAlignClass : "text-center"}
           `}
         >
           {text}
         </Text>
-        {icon && icon.icoAlign === "right" && IconComponent}
+        {icon && icon.icoAlign === "right" && (
+          <Image
+            source={icon.source}
+            className={`${icon.IcoSize ? icon.IcoSize : defaultIcoSize} ${iconMarginClass}`}
+          />
+        )}
       </View>
     </Pressable>
   );

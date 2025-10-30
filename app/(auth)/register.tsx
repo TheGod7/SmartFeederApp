@@ -1,10 +1,14 @@
+import BottomBackground from "@/components/background/Background";
 import Separator from "@/components/Separator";
 import SimpleButton from "@/components/SimpleButton";
 import TextInput from "@/components/TextInput";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -12,31 +16,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import BottomBackground from "@/components/background/Background";
-import { useAuth } from "@/context/AuthContext";
-import { Controller, useForm } from "react-hook-form";
-
-type FormData = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+type FormData = { email: string; password: string; confirmPassword: string };
 
 export default function Register() {
   const router = useRouter();
-  const { loginWithGoogle } = useAuth();
   const insets = useSafeAreaInsets();
-
-  const EyeClose = require("@/assets/ico/ClosedEye.svg");
-  const EyeOpen = require("@/assets/ico/OpenEye.svg");
-
-  const EyeCloseWrong = require("@/assets/ico/ClosedEyeWrong.svg");
-  const EyeOpenWrong = require("@/assets/ico/OpenEyeWrong.svg");
-
-  const FOOTER_BOTTOM_PADDING = 16;
-  const dynamicPaddingBottom = FOOTER_BOTTOM_PADDING + insets.bottom;
-
-  const { register, isLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading } = useAuth();
+  const [ShowPassword, setShowPassword] = useState(false);
 
   const {
     control,
@@ -45,45 +31,52 @@ export default function Register() {
     getValues,
     setError,
     trigger,
-  } = useForm<FormData>({
-    mode: "onChange",
-  });
+    clearErrors,
+  } = useForm<FormData>({ mode: "onChange" });
+  const dynamicPaddingBottom = 16 + insets.bottom;
 
-  const [ShowPassword, setShowPassword] = useState(false);
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => isLoading
+    );
+    return () => backHandler.remove();
+  }, [isLoading]);
+
+  const EyeClose = require("@/assets/ico/ClosedEye.svg");
+  const EyeOpen = require("@/assets/ico/OpenEye.svg");
+  const EyeCloseWrong = require("@/assets/ico/ClosedEyeWrong.svg");
+  const EyeOpenWrong = require("@/assets/ico/OpenEyeWrong.svg");
+
+  const setFormError = (message: string) => {
+    setError("email", { message });
+    setError("password", { message });
+  };
 
   const onSubmit = async (data: FormData) => {
+    clearErrors();
     const response = await register(data);
-
     if (response.success) {
       router.replace("/(home)");
     } else {
-      setError("email", {
-        message: response.message,
-      });
+      setFormError(response.message || "Error al crear la cuenta");
     }
   };
 
-  const OnGoogleSignin = async () => {
+  const onGoogleSignin = async () => {
+    clearErrors();
     try {
       const response = await loginWithGoogle();
-
       if (response.success) {
         router.replace({
           pathname: "/(home)",
-          params: {
-            hasPassword: String(response.data ?? false),
-          },
+          params: { hasPassword: String(response.data ?? false) },
         });
       } else {
-        setError("email", {
-          message: response.message,
-        });
+        setFormError(response.message || "Error al iniciar sesión con Google.");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      setError("email", {
-        message: "Error de conexión. Inténtalo de nuevo.",
-      });
+    } catch {
+      setFormError("Error de conexión. Inténtalo de nuevo.");
     }
   };
 
@@ -149,7 +142,7 @@ export default function Register() {
                         ? "********************"
                         : "ContraseñaSuperSegura"
                     }
-                    icoPressable={true}
+                    icoPressable
                     value={value}
                     onChangeText={(text) => {
                       onChange(text);
@@ -178,7 +171,6 @@ export default function Register() {
                 control={control}
                 rules={{
                   required: "Confirmar contraseña es obligatorio",
-
                   validate: (value) =>
                     value === getValues("password") ||
                     "Las contraseñas no coinciden",
@@ -217,13 +209,11 @@ export default function Register() {
             disabled={isLoading}
             onPress={handleSubmit(onSubmit)}
           />
-
           <Separator
             text="O regístrate con"
             textClass="text-base text-text/70"
             lineClass="bg-text/30 h-px"
           />
-
           <SimpleButton
             text="Registrarse con Google"
             textColor="black"
@@ -235,14 +225,10 @@ export default function Register() {
               source: require("@/assets/ico/GoogleIco.svg"),
               icoAlign: "left",
             }}
-            border={{
-              borderColor: "text",
-              borderSize: 1,
-            }}
+            border={{ borderColor: "text", borderSize: 1 }}
             disabled={isLoading}
-            onPress={() => OnGoogleSignin()}
+            onPress={onGoogleSignin}
           />
-
           <SimpleButton
             text="¿Ya eres un usuario? Acceder!"
             textColor="primary"

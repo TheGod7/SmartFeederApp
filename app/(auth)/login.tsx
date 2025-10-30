@@ -4,10 +4,11 @@ import SimpleButton from "@/components/SimpleButton";
 import TextInput from "@/components/TextInput";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -15,22 +16,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type FormData = {
-  email: string;
-  password: string;
-};
+type FormData = { email: string; password: string };
+
 export default function Login() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { login, loginWithGoogle, isLoading } = useAuth();
-
-  const EyeClose = require("@/assets/ico/ClosedEye.svg");
-  const EyeOpen = require("@/assets/ico/OpenEye.svg");
-  const EyeCloseWrong = require("@/assets/ico/ClosedEyeWrong.svg");
-  const EyeOpenWrong = require("@/assets/ico/OpenEyeWrong.svg");
-
-  const FOOTER_BOTTOM_PADDING = 16;
-  const dynamicPaddingBottom = FOOTER_BOTTOM_PADDING + insets.bottom;
+  const [ShowPassword, setShowPassword] = useState(false);
 
   const {
     control,
@@ -39,61 +31,56 @@ export default function Login() {
     setError,
     clearErrors,
   } = useForm<FormData>();
+  const dynamicPaddingBottom = 16 + insets.bottom;
 
-  const [ShowPassword, setShowPassword] = useState(false);
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => isLoading
+    );
+    return () => backHandler.remove();
+  }, [isLoading]);
 
-  const onSubmit = async (data: FormData) => {
+  const handleLogin = async (data: FormData) => {
     clearErrors();
-
     try {
       const response = await login(data);
-
-      if (response.success) {
-        router.replace("/(home)");
-      } else {
-        setError("email", {
-          message: response.message || "Error de inicio de sesión",
-        });
-        setError("password", {
-          message: response.message || "Error de inicio de sesión",
-        });
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      setError("email", {
-        message: "Error de conexión. Inténtalo de nuevo.",
-      });
-    } finally {
+      if (response.success) router.replace("/(home)");
+      else setFormErrors(response.message);
+    } catch {
+      setFormErrors("Error de conexión. Inténtalo de nuevo.");
     }
   };
 
-  const OnGoogleSignin = async () => {
+  const handleGoogleLogin = async () => {
     clearErrors();
-
     try {
       const response = await loginWithGoogle();
-
-      if (response.success) {
+      if (response.success)
         router.replace({
           pathname: "/(home)",
-          params: {
-            hasPassword: String(response.data ?? false),
-          },
+          params: { hasPassword: String(response.data ?? false) },
         });
-      } else {
-        setError("email", {
-          type: "manual",
-          message: response.message || "Error al iniciar sesión con Google.",
-        });
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      setError("email", {
-        type: "manual",
-        message: "Error de conexión durante el inicio de sesión con Google.",
-      });
+      else
+        setFormErrors(
+          response.message || "Error al iniciar sesión con Google."
+        );
+    } catch {
+      setFormErrors(
+        "Error de conexión durante el inicio de sesión con Google."
+      );
     }
   };
+
+  const setFormErrors = (message: string) => {
+    setError("email", { message });
+    setError("password", { message });
+  };
+
+  const EyeClose = require("@/assets/ico/ClosedEye.svg");
+  const EyeOpen = require("@/assets/ico/OpenEye.svg");
+  const EyeCloseWrong = require("@/assets/ico/ClosedEyeWrong.svg");
+  const EyeOpenWrong = require("@/assets/ico/OpenEyeWrong.svg");
 
   return (
     <KeyboardAvoidingView
@@ -108,12 +95,10 @@ export default function Login() {
             <Text className="text-primary font-itim text-4xl sm:text-5xl">
               Bienvenido de nuevo
             </Text>
-
             <Text className="text-text/70 font-itim text-lg sm:text-xl mt-0.5">
               Inicia y comienza a controlar tus dispositivos
             </Text>
           </View>
-
           <View className="gap-6 mt-3">
             <Controller
               name="email"
@@ -137,7 +122,6 @@ export default function Login() {
                 />
               )}
             />
-
             <Controller
               name="password"
               control={control}
@@ -156,7 +140,7 @@ export default function Login() {
                       ? "********************"
                       : "ContraseñaSuperSegura"
                   }
-                  icoPressable={true}
+                  icoPressable
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -178,7 +162,6 @@ export default function Login() {
             />
           </View>
         </View>
-
         <View
           className="gap-4 pt-3"
           style={{ paddingBottom: dynamicPaddingBottom }}
@@ -188,17 +171,15 @@ export default function Login() {
             textColor="black"
             backgroundColor="primary"
             customW="w-full"
-            disabled={isLoading}
             customH="h-14"
-            onPress={handleSubmit(onSubmit)}
+            disabled={isLoading}
+            onPress={handleSubmit(handleLogin)}
           />
-
           <Separator
             text="O Inicia sesión con"
             textClass="text-base text-text/70"
             lineClass="bg-text/30 h-px"
           />
-
           <SimpleButton
             text="Iniciar con Google"
             textColor="black"
@@ -211,13 +192,9 @@ export default function Login() {
               source: require("@/assets/ico/GoogleIco.svg"),
               icoAlign: "left",
             }}
-            border={{
-              borderColor: "text",
-              borderSize: 1,
-            }}
-            onPress={OnGoogleSignin}
+            border={{ borderColor: "text", borderSize: 1 }}
+            onPress={handleGoogleLogin}
           />
-
           <SimpleButton
             text="¡No tienes una cuenta? Créala!"
             textColor="primary"
@@ -230,7 +207,6 @@ export default function Login() {
           />
         </View>
       </View>
-
       {isLoading && (
         <View
           className="absolute inset-0 items-center justify-center"

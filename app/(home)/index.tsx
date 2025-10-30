@@ -1,12 +1,33 @@
 import Background from "@/components/background/Background";
-import DeviceCard from "@/components/Cartd";
 import CreatePasswordModal from "@/components/modals/CreatePasswordModal";
 import SimpleButton from "@/components/SimpleButton";
-import { useLocalSearchParams } from "expo-router";
+import useBLE from "@/utils/useBLE";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 const AddDeviceButton = () => {
+  const { requestPermissions } = useBLE();
+
+  const router = useRouter();
+  let isProcessing = false;
+
+  const handlePress = async () => {
+    if (isProcessing) return;
+    isProcessing = true;
+
+    try {
+      const granted = await requestPermissions();
+      if (!granted) return;
+
+      router.push("/(home)/(bluetooth)");
+    } finally {
+      setTimeout(() => {
+        isProcessing = false;
+      }, 1000);
+    }
+  };
+
   return (
     <SimpleButton
       text="Añadir nuevo dispositivo"
@@ -24,6 +45,7 @@ const AddDeviceButton = () => {
         icoAlign: "left",
         IcoSize: "h-10 w-10",
       }}
+      onPress={handlePress}
       rounded="sm"
     />
   );
@@ -69,12 +91,12 @@ const Home = () => {
       <View className="w-11/12">
         {device ? (
           <>
-            <DeviceCard
+            {/* <DeviceCard
               calories="120"
               deviceName="hola"
               lastUpdate="12m"
               nextMeal="2:30"
-            />
+            /> */}
           </>
         ) : (
           <View className="gap-8 items-center justify-center">
